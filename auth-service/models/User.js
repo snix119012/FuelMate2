@@ -33,10 +33,10 @@ const User = sequelize.define('User', {
   },
   isAdmin: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false // Domyślnie zwykły użytkownik
+    defaultValue: false 
   }
 }, {
-  tableName: 'users' // Wymuszenie nazwy tabeli 'users' zgodnie z PDF
+  tableName: 'users' 
 });
 
 module.exports = User;
