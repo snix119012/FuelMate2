@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -5,8 +6,8 @@ const sequelize = require('./db');
 const User = require('./models/User');
 
 const app = express();
-const PORT = 3001;
-const JWT_SECRET = 'supersecretkey';
+const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
 app.use(express.json());
 
