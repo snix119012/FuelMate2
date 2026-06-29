@@ -10,12 +10,19 @@ const PORT = process.env.PORT || 3002;
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 
+const { getDistanceFromLatLonInKm } = require('./utils/haversine');
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'station-service', port: PORT });
 });
 
 app.get('/stations', async (req, res) => {
   try {
+    const { lat, lng, radius } = req.query;
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const rad = parseFloat(radius) || 10; // domyślny promień to 10 km
+
     const stations = await Station.findAll({
       include: [
         {
@@ -25,7 +32,7 @@ app.get('/stations', async (req, res) => {
       ]
     });
     
-    const result = stations.map(station => {
+    let result = stations.map(station => {
       const plainStation = station.get({ plain: true });
       const latestPrices = {};
       
@@ -49,8 +56,19 @@ app.get('/stations', async (req, res) => {
       
       plainStation.prices = latestPrices;
       delete plainStation.Prices;
+      
+      // Obliczanie odległości jeśli dostarczono koordynaty
+      if (!isNaN(userLat) && !isNaN(userLng)) {
+        plainStation.distance = getDistanceFromLatLonInKm(userLat, userLng, plainStation.lat, plainStation.lng);
+      }
+      
       return plainStation;
     });
+
+    // Filtruj po promieniu, jeśli parametry zostały prawidłowo przekazane
+    if (!isNaN(userLat) && !isNaN(userLng)) {
+      result = result.filter(station => station.distance <= rad);
+    }
 
     res.json(result);
   } catch (error) {
