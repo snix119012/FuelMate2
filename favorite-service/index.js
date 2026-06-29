@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const sequelize = require('./db');
@@ -15,7 +15,9 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'favorite-service', port: PORT });
 });
 
-app.get('/favorites', authenticateToken, async (req, res) => {
+const favoriteRouter = express.Router();
+
+favoriteRouter.get('/', authenticateToken, async (req, res) => {
   try {
     const favorites = await Favorite.findAll({
       where: { userId: req.user.id },
@@ -28,7 +30,7 @@ app.get('/favorites', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/favorites', authenticateToken, async (req, res) => {
+favoriteRouter.post('/', authenticateToken, async (req, res) => {
   try {
     const { stationId, stationName } = req.body;
 
@@ -58,7 +60,7 @@ app.post('/favorites', authenticateToken, async (req, res) => {
   }
 });
 
-app.delete('/favorites/:id', authenticateToken, async (req, res) => {
+favoriteRouter.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const favorite = await Favorite.findOne({
@@ -77,7 +79,7 @@ app.delete('/favorites/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.patch('/favorites/:id/notifications', authenticateToken, async (req, res) => {
+favoriteRouter.patch('/:id/notifications', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { enabled } = req.body;
@@ -103,6 +105,10 @@ app.patch('/favorites/:id/notifications', authenticateToken, async (req, res) =>
     res.status(500).json({ error: 'Błąd podczas aktualizacji powiadomień' });
   }
 });
+
+// Obsługa zarówno bezpośrednich wywołań (/favorites) jak i przez API Gateway (/api/favorites)
+app.use('/favorites', favoriteRouter);
+app.use('/api/favorites', favoriteRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

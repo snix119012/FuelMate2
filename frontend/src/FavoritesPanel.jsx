@@ -1,22 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
-// UWAGA: ten komponent służy do bezpośredniego testowania Favorite Service.
-// W docelowej architekturze powinien komunikować się przez API Gateway pod /api/favorites/*
-const API_URL = 'http://localhost:3004/favorites';
+// Komunikuje się z Favorite Service przez API Gateway
+const API_URL = 'http://localhost:3000/api/favorites';
 
-export default function FavoritesPanel({ token: propToken }) {
-  const [token, setToken] = useState(propToken || localStorage.getItem('fuelmate_token') || '');
+export default function FavoritesPanel({ token }) {
   const [favorites, setFavorites] = useState([]);
   const [stationId, setStationId] = useState('');
   const [stationName, setStationName] = useState('');
   const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    if (propToken && propToken !== token) {
-      setToken(propToken);
-    }
-    localStorage.setItem('fuelmate_token', token);
-  }, [propToken, token]);
 
   const headers = {
     'Content-Type': 'application/json',
@@ -86,19 +77,14 @@ export default function FavoritesPanel({ token: propToken }) {
     }
   }
 
+  if (!token) {
+    return <p>Musisz być zalogowany, aby zarządzać ulubionymi stacjami.</p>;
+  }
+
   return (
     <div style={{ padding: '1rem', border: '1px solid #ccc', marginTop: '1rem' }}>
-      <h2>Ulubione stacje (Favorite Service)</h2>
-      <p>
-        Token JWT:{" "}
-        <input
-          type="text"
-          value={token}
-          onChange={e => setToken(e.target.value)}
-          placeholder="wklej token JWT"
-          style={{ width: '320px' }}
-        />
-      </p>
+      <h2>Ulubione stacje</h2>
+
       <button onClick={fetchFavorites}>Pobierz ulubione</button>
 
       <form onSubmit={addFavorite} style={{ marginTop: '1rem' }}>

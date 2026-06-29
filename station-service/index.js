@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const sequelize = require('./db');
 const { Station, FuelType, Price, StationRating } = require('./models');
+const authenticateToken = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -74,6 +75,44 @@ app.get('/stations', async (req, res) => {
   } catch (error) {
     console.error('Error fetching stations:', error);
     res.status(500).json({ error: 'Wystąpił błąd podczas pobierania stacji' });
+  }
+});
+
+app.post('/stations/:id/prices', authenticateToken, async (req, res) => {
+  try {
+    const stationId = parseInt(req.params.id);
+    const { fuelTypeId, price } = req.body;
+    const userId = req.user.id;
+
+    if (isNaN(stationId)) {
+      return res.status(400).json({ error: 'Nieprawidłowe ID stacji' });
+    }
+    
+    if (!fuelTypeId || typeof price !== 'number') {
+      return res.status(400).json({ error: 'Brak wymaganych danych: fuelTypeId oraz price (jako liczba)' });
+    }
+
+    const station = await Station.findByPk(stationId);
+    if (!station) {
+      return res.status(404).json({ error: 'Stacja nie została znaleziona' });
+    }
+
+    const fuelType = await FuelType.findByPk(fuelTypeId);
+    if (!fuelType) {
+      return res.status(404).json({ error: 'Typ paliwa nie istnieje' });
+    }
+
+    const newPrice = await Price.create({
+      price,
+      userId,
+      stationId,
+      fuelTypeId
+    });
+
+    res.status(201).json({ message: 'Cena dodana pomyślnie', price: newPrice });
+  } catch (error) {
+    console.error('Error adding price:', error);
+    res.status(500).json({ error: 'Wystąpił błąd podczas dodawania ceny' });
   }
 });
 
