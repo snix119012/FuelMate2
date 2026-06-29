@@ -19,10 +19,10 @@ function App() {
     if (token) setIsLoggedIn(true)
   }, [])
 
-  const handleLogin = () => {
-    localStorage.setItem('fuelmate_token', TEST_TOKEN)
-    setIsLoggedIn(true)
-    setActiveTab('home')
+  const handleLogin = (token) => {
+    localStorage.setItem('fuelmate_token', token);
+    setIsLoggedIn(true);
+    setActiveTab('home');
   }
 
   const handleLogout = () => {
