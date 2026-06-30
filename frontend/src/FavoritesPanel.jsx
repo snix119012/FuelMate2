@@ -1,18 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-// Komunikuje się z Favorite Service przez API Gateway
+// Komunikuje się z Favorite Service i Station Service przez API Gateway
 const API_URL = 'http://localhost:3000/api/favorites';
+const STATIONS_API_URL = 'http://localhost:3000/api/stations';
 
 export default function FavoritesPanel({ token }) {
   const [favorites, setFavorites] = useState([]);
-  const [stationId, setStationId] = useState('');
-  const [stationName, setStationName] = useState('');
+  const [stations, setStations] = useState([]);
+  const [selectedStationId, setSelectedStationId] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState('');
 
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`
   };
+
+  useEffect(() => {
+    fetchStations();
+    fetchFavorites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function fetchStations() {
+    try {
+      const res = await fetch(STATIONS_API_URL);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Błąd pobierania stacji');
+      setStations(data);
+    } catch (err) {
+      setMessage(err.message);
+    }
+  }
 
   async function fetchFavorites() {
     try {
@@ -30,17 +49,32 @@ export default function FavoritesPanel({ token }) {
 
   async function addFavorite(e) {
     e.preventDefault();
+    if (!selectedStationId) {
+      setMessage('Wybierz stację z listy');
+      return;
+    }
+
+    const stationIdNum = Number(selectedStationId);
+
+    if (favorites.some(f => f.stationId === stationIdNum)) {
+      setMessage('Ta stacja jest już w ulubionych');
+      return;
+    }
+
+    const station = stations.find(s => s.id === stationIdNum);
+    const stationName = station ? station.name : '';
+
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ stationId: Number(stationId), stationName })
+        body: JSON.stringify({ stationId: stationIdNum, stationName })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Błąd dodawania do ulubionych');
       setFavorites([data, ...favorites]);
-      setStationId('');
-      setStationName('');
+      setSelectedStationId('');
+      setSearchTerm('');
       setMessage('Dodano do ulubionych');
     } catch (err) {
       setMessage(err.message);
@@ -81,27 +115,48 @@ export default function FavoritesPanel({ token }) {
     return <p>Musisz być zalogowany, aby zarządzać ulubionymi stacjami.</p>;
   }
 
+  const filteredStations = stations.filter(s =>
+    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const favoriteStationIds = new Set(favorites.map(f => f.stationId));
+  const availableStations = filteredStations.filter(s => !favoriteStationIds.has(s.id));
+
   return (
     <div style={{ padding: '1rem', border: '1px solid #ccc', marginTop: '1rem' }}>
       <h2>Ulubione stacje</h2>
 
-      <button onClick={fetchFavorites}>Pobierz ulubione</button>
+      <button onClick={fetchFavorites} style={{ marginBottom: '1rem' }}>
+        Odśwież ulubione
+      </button>
 
-      <form onSubmit={addFavorite} style={{ marginTop: '1rem' }}>
-        <input
-          type="number"
-          placeholder="stationId"
-          value={stationId}
-          onChange={e => setStationId(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="stationName (opcjonalnie)"
-          value={stationName}
-          onChange={e => setStationName(e.target.value)}
-        />
-        <button type="submit">Dodaj do ulubionych</button>
+      <form onSubmit={addFavorite} style={{ marginBottom: '1rem' }}>
+        <div>
+          <input
+            type="text"
+            placeholder="Wyszukaj stację..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{ width: '200px', marginRight: '0.5rem' }}
+          />
+          <select
+            value={selectedStationId}
+            onChange={e => setSelectedStationId(e.target.value)}
+            required
+            style={{ width: '240px' }}
+          >
+            <option value="">-- Wybierz stację --</option>
+            {availableStations.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name} {s.brand ? `(${s.brand})` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button type="submit" style={{ marginTop: '0.5rem' }}>
+          Dodaj do ulubionych
+        </button>
       </form>
 
       {message && <p><em>{message}</em></p>}
@@ -109,11 +164,11 @@ export default function FavoritesPanel({ token }) {
       <ul>
         {favorites.map(f => (
           <li key={f.id}>
-            <strong>#{f.stationId}</strong> {f.stationName || '(brak nazwy)'} —{" "}
-            powiadomienia: {f.notifyOnPriceChange ? 'WŁ' : 'WYŁ'}{" "}
+            <strong>{f.stationName || `Stacja #${f.stationId}`}</strong> —{' '}
+            powiadomienia: {f.notifyOnPriceChange ? 'WŁ' : 'WYŁ'}{' '}
             <button onClick={() => toggleNotifications(f.id, f.notifyOnPriceChange)}>
               {f.notifyOnPriceChange ? 'Wyłącz' : 'Włącz'}
-            </button>{" "}
+            </button>{' '}
             <button onClick={() => removeFavorite(f.id)}>Usuń</button>
           </li>
         ))}
