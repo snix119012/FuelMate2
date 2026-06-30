@@ -10,6 +10,7 @@ export default function FavoritesPanel({ token }) {
   const [selectedStationId, setSelectedStationId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedStation, setSelectedStation] = useState(null);
 
   const headers = {
     'Content-Type': 'application/json',
@@ -89,6 +90,7 @@ export default function FavoritesPanel({ token }) {
       });
       if (!res.ok) throw new Error('Błąd usuwania z ulubionych');
       setFavorites(favorites.filter(f => f.id !== id));
+      setSelectedStation(null);
       setMessage('Usunięto z ulubionych');
     } catch (err) {
       setMessage(err.message);
@@ -111,6 +113,15 @@ export default function FavoritesPanel({ token }) {
     }
   }
 
+  function openStationDetails(stationId) {
+    const station = stations.find(s => s.id === stationId);
+    if (station) setSelectedStation(station);
+  }
+
+  function closeStationDetails() {
+    setSelectedStation(null);
+  }
+
   if (!token) {
     return <p>Musisz być zalogowany, aby zarządzać ulubionymi stacjami.</p>;
   }
@@ -122,6 +133,10 @@ export default function FavoritesPanel({ token }) {
 
   const favoriteStationIds = new Set(favorites.map(f => f.stationId));
   const availableStations = filteredStations.filter(s => !favoriteStationIds.has(s.id));
+
+  const selectedFavorite = selectedStation
+    ? favorites.find(f => f.stationId === selectedStation.id)
+    : null;
 
   return (
     <div style={{ padding: '1rem', border: '1px solid #ccc', marginTop: '1rem' }}>
@@ -164,15 +179,96 @@ export default function FavoritesPanel({ token }) {
       <ul>
         {favorites.map(f => (
           <li key={f.id}>
-            <strong>{f.stationName || `Stacja #${f.stationId}`}</strong> —{' '}
-            powiadomienia: {f.notifyOnPriceChange ? 'WŁ' : 'WYŁ'}{' '}
+            <button
+              onClick={() => openStationDetails(f.stationId)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                color: '#0066cc'
+              }}
+            >
+              {f.stationName || `Stacja #${f.stationId}`}
+            </button>
+            {' — '}
+            powiadomienia: {f.notifyOnPriceChange ? 'WŁ' : 'WYŁ'}
+            {' '}
             <button onClick={() => toggleNotifications(f.id, f.notifyOnPriceChange)}>
               {f.notifyOnPriceChange ? 'Wyłącz' : 'Włącz'}
-            </button>{' '}
+            </button>
+            {' '}
             <button onClick={() => removeFavorite(f.id)}>Usuń</button>
           </li>
         ))}
       </ul>
+
+      {selectedStation && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+          onClick={closeStationDetails}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              padding: '1.5rem',
+              borderRadius: '8px',
+              maxWidth: '400px',
+              width: '90%'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3>{selectedStation.name}</h3>
+            {selectedStation.brand && <p><strong>Marka:</strong> {selectedStation.brand}</p>}
+            {selectedStation.address && <p><strong>Adres:</strong> {selectedStation.address}</p>}
+            <p><strong>Współrzędne:</strong> {selectedStation.lat}, {selectedStation.lng}</p>
+            <p><strong>Średnia ocena:</strong> {selectedStation.averageRating || 0} / 5 ({selectedStation.ratingCount || 0} głosów)</p>
+
+            <h4>Aktualne ceny:</h4>
+            {selectedStation.prices && Object.keys(selectedStation.prices).length > 0 ? (
+              <ul>
+                {Object.entries(selectedStation.prices).map(([fuel, info]) => (
+                  <li key={fuel}>
+                    {fuel}: <strong>{info.price} zł</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Brak cen dla tej stacji.</p>
+            )}
+
+            {selectedFavorite && (
+              <p>
+                <strong>Powiadomienia:</strong>{' '}
+                {selectedFavorite.notifyOnPriceChange ? 'włączone' : 'wyłączone'}
+                {' '}
+                <button
+                  onClick={() => toggleNotifications(selectedFavorite.id, selectedFavorite.notifyOnPriceChange)}
+                >
+                  {selectedFavorite.notifyOnPriceChange ? 'Wyłącz' : 'Włącz'}
+                </button>
+              </p>
+            )}
+
+            <button onClick={closeStationDetails} style={{ marginTop: '1rem' }}>
+              Zamknij
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
