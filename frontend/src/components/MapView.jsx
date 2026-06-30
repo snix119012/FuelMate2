@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
 import MapAlertMarkers from './MapAlertMarkers';
 
-// Naprawa domyślnych ikon Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -13,7 +12,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Funkcja tworząca customową ikonę z ceną
 const createPriceIcon = (price, brand) => {
   return L.divIcon({
     className: 'custom-price-marker',
@@ -33,26 +31,20 @@ const ChangeMapView = ({ center }) => {
   return null;
 };
 
-const MapView = ({ refreshTrigger, onStationSelect }) => {
-  const [mapCenter, setMapCenter] = useState([52.2297, 21.0122]); // Domyślnie Warszawa
+const MapClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click(e) {
+      if (onMapClick) onMapClick(e.latlng);
+    },
+  });
+  return null;
+};
+
+const MapView = ({ refreshTrigger, onStationSelect, onMapClick }) => {
+  const [mapCenter, setMapCenter] = useState([52.2297, 21.0122]);
   const [stations, setStations] = useState([]);
-  const [radius, setRadius] = useState(50); // Zwiększyłem początkowy do 50km
+  const [radius, setRadius] = useState(50);
 
-  // Pobieranie lokalizacji GPS użytkownika
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setMapCenter([position.coords.latitude, position.coords.longitude]);
-        },
-        (error) => {
-          console.warn("Nie udało się pobrać lokalizacji, zostajemy przy Warszawie.");
-        }
-      );
-    }
-  }, []);
-
-  // Pobieranie stacji z serwera (z uwzględnieniem filtra promienia)
   useEffect(() => {
     const fetchStations = async () => {
       try {
@@ -86,17 +78,15 @@ const MapView = ({ refreshTrigger, onStationSelect }) => {
 
       <div style={{ height: '85vh', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
         <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%', backgroundColor: '#0f172a' }}>
-          {/* Ciemny motyw mapy (CartoDB Dark Matter) */}
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           />
           
           <ChangeMapView center={mapCenter} />
+          <MapClickHandler onMapClick={onMapClick} />
           
-          {/* Rysowanie stacji */}
           {stations.map(station => {
-            // Pobieramy cenę najpopularniejszego paliwa do wyświetlenia na dymku (np. PB95)
             const displayPrice = station.prices && station.prices['PB95'] ? station.prices['PB95'].price : null;
             
             return (
