@@ -1,0 +1,813 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "FuelMate API",
+    "description": "Specyfikacja REST API aplikacji FuelMate — mikroserwisowej platformy\ndo wyszukiwania stacji paliw, zgłaszania cen, ocen, alertów drogowych\noraz zarządzania ulubionymi stacjami.\n",
+    "version": "1.0.0",
+    "contact": {
+      "name": "FuelMate"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "API Gateway (lokalnie przez Docker Compose)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Rejestracja, logowanie i zarządzanie punktami użytkownika"
+    },
+    {
+      "name": "Stations",
+      "description": "Stacje benzynowe, ceny paliw i opinie"
+    },
+    {
+      "name": "Favorites",
+      "description": "Ulubione stacje użytkownika"
+    },
+    {
+      "name": "Alerts",
+      "description": "Alerty drogowe i ich potwierdzenia"
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Rejestracja nowego użytkownika",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "postalCode": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Użytkownik utworzony",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Błąd walidacji lub użytkownik już istnieje"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logowanie użytkownika",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Zalogowano pomyślnie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Nieprawidłowe dane logowania"
+          }
+        }
+      }
+    },
+    "/api/users/{id}/points": {
+      "patch": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Dodanie punktów lojalnościowych użytkownikowi",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "points"
+                ],
+                "properties": {
+                  "points": {
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Punkty zaktualizowane"
+          },
+          "404": {
+            "description": "Nie znaleziono użytkownika"
+          }
+        }
+      }
+    },
+    "/api/stations": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Pobranie listy stacji w zadanym promieniu",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista stacji",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Station"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stations/{id}/prices": {
+      "post": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Dodanie lub aktualizacja ceny paliwa dla stacji",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cena zapisana"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      }
+    },
+    "/api/stations/{id}/ratings": {
+      "post": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Dodanie opinii o stacji",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatingInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Opinia dodana"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Pobranie opinii dla stacji",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista opinii",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Rating"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/favorites": {
+      "get": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Pobranie ulubionych stacji zalogowanego użytkownika",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista ulubionych",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Favorite"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Dodanie stacji do ulubionych",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Stacja dodana do ulubionych"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          },
+          "409": {
+            "description": "Stacja już jest w ulubionych"
+          }
+        }
+      }
+    },
+    "/api/favorites/{id}": {
+      "delete": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Usunięcie stacji z ulubionych",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usunięto"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      }
+    },
+    "/api/favorites/{id}/notifications": {
+      "patch": {
+        "tags": [
+          "Favorites"
+        ],
+        "summary": "Włączenie/wyłączenie powiadomień o zmianie ceny",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "enabled"
+                ],
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ustawienia powiadomień zaktualizowane"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Pobranie aktywnych alertów w zadanym promieniu",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista alertów",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Alert"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Dodanie nowego alertu drogowego",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Alert dodany"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      }
+    },
+    "/api/alerts/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Potwierdzenie istnienia alertu",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Alert potwierdzony"
+          },
+          "400": {
+            "description": "Już potwierdzono"
+          },
+          "401": {
+            "description": "Brak autoryzacji"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserCreated": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "integer"
+          }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "integer"
+          }
+        }
+      },
+      "Station": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "averageRating": {
+            "type": "number"
+          },
+          "ratingCount": {
+            "type": "integer"
+          },
+          "prices": {
+            "type": "object"
+          }
+        }
+      },
+      "PriceInput": {
+        "type": "object",
+        "required": [
+          "fuelTypeId",
+          "price"
+        ],
+        "properties": {
+          "fuelTypeId": {
+            "type": "integer"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      },
+      "RatingInput": {
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "Rating": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "rating": {
+            "type": "integer"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "integer"
+          }
+        }
+      },
+      "Favorite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "userId": {
+            "type": "integer"
+          },
+          "stationId": {
+            "type": "integer"
+          },
+          "stationName": {
+            "type": "string"
+          },
+          "notifyOnPriceChange": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FavoriteInput": {
+        "type": "object",
+        "required": [
+          "stationId"
+        ],
+        "properties": {
+          "stationId": {
+            "type": "integer"
+          },
+          "stationName": {
+            "type": "string"
+          }
+        }
+      },
+      "Alert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "patrol",
+              "fotoradar",
+              "wypadek",
+              "kontrola",
+              "kamera"
+            ]
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "confirmations": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "AlertInput": {
+        "type": "object",
+        "required": [
+          "type",
+          "latitude",
+          "longitude"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "patrol",
+              "fotoradar",
+              "wypadek",
+              "kontrola",
+              "kamera"
+            ]
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
