@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: FuelMate - Auth Service API
+  description: Mikroserwis odpowiedzialny za logowanie i rejestrację użytkowników w aplikacji FuelMate.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/auth
+    description: Adres API poprzez API Gateway
+  - url: http://localhost:3001
+    description: Adres bezpośredni Auth Service
+
+paths:
+  /register:
+    post:
+      summary: Rejestracja nowego użytkownika
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: test@test.pl
+                password:
+                  type: string
+                  example: superhaslo123
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                city:
+                  type: string
+                postalCode:
+                  type: string
+      responses:
+        '201':
+          description: Pomyślnie utworzono konto
+        '400':
+          description: Użytkownik już istnieje
+        '500':
+          description: Błąd serwera
+
+  /login:
+    post:
+      summary: Logowanie użytkownika i pobieranie tokenu JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: test@test.pl
+                password:
+                  type: string
+                  example: superhaslo123
+      responses:
+        '200':
+          description: Poprawne logowanie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  userId:
+                    type: integer
+        '401':
+          description: Nieprawidłowe dane logowania
+        '500':
+          description: Błąd serwera

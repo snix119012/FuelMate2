@@ -2,12 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 const sequelize = require('./db');
 const User = require('./models/User');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+
+const swaggerDocument = YAML.load('./swagger.yaml');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(express.json());
 
