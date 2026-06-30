@@ -20,6 +20,7 @@ services:
       - PORT=3002
       - JWT_SECRET=supersecretkey
       - DB_PATH=./data/database.sqlite
+      - AUTH_SERVICE_URL=http://auth-service:3001
     volumes:
       - station-data:/app/data
     networks:
