@@ -24,17 +24,6 @@ exports.createAlert = async (req, res) => {
       userId, type, latitude, longitude, expiresAt
     });
 
-    try {
-      await axios.patch(`${process.env.API_GATEWAY_URL}/api/users/${userId}/points`, {
-        points: 2,
-        reason: 'new_alert'
-      }, {
-        headers: { Authorization: req.headers['authorization'] }
-      });
-    } catch (err) {
-      console.error('Nie udało się przydzielić punktów w Auth Service:', err.message);
-    }
-
     res.status(201).json(newAlert);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -67,6 +56,16 @@ exports.confirmAlert = async (req, res) => {
   try {
     const { alertId } = req.params;
     const userId = req.user.id;
+
+    const alert = await Alert.findByPk(alertId);
+    if (!alert) {
+      return res.status(404).json({ message: 'Nie znaleziono alertu.' });
+    }
+
+    if (alert.userId == userId) {
+      return res.status(400).json({ message: 'Nie możesz potwierdzić własnego zgłoszenia.' });
+    }
+
     const existingConfirmation = await AlertConfirmation.findOne({
       where: { alertId, userId }
     });
@@ -77,19 +76,53 @@ exports.confirmAlert = async (req, res) => {
 
     await AlertConfirmation.create({ alertId, userId });
 
+    const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+
     try {
-      await axios.patch(`${process.env.API_GATEWAY_URL}/api/users/${userId}/points`, {
+      await axios.patch(`${authServiceUrl}/api/users/${userId}/points`, {
         points: 1,
         reason: 'confirm_alert'
       }, {
         headers: { Authorization: req.headers['authorization'] }
       });
     } catch (err) {
-      console.error('Nie udało się przydzielić punktów:', err.message);
+      console.error('Nie udało się przydzielić punktu potwierdzającemu:', err.message);
+    }
+
+    try {
+      await axios.patch(`${authServiceUrl}/api/users/${alert.userId}/points`, {
+        points: 2,
+        reason: 'alert_validated_by_other'
+      }, {
+        headers: { Authorization: req.headers['authorization'] }
+      });
+    } catch (err) {
+      console.error('Nie udało się przydzielić punktów twórcy alertu:', err.message);
     }
 
     res.status(201).json({ message: 'Alert potwierdzony.' });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteAlert = async (req, res) => {
+  try {
+    const { alertId } = req.params;
+    const userId = req.user.id; 
+    const alert = await Alert.findByPk(alertId);
+
+    if (!alert) {
+      return res.status(404).json({ message: 'Nie znaleziono alertu.' });
+    }
+
+    if (alert.userId != userId) {
+      return res.status(403).json({ message: 'Brak uprawnień. Tylko twórca może usunąć ten alert.' });
+    }
+
+    await alert.destroy();
+    return res.status(200).json({ message: 'Alert został pomyślnie usunięty.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Błąd podczas usuwania alertu.', error: error.message });
   }
 };

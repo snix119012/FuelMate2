@@ -23,7 +23,7 @@ app.get('/stations', async (req, res) => {
     const { lat, lng, radius } = req.query;
     const userLat = parseFloat(lat);
     const userLng = parseFloat(lng);
-    const rad = parseFloat(radius) || 10; // domyślny promień to 10 km
+    const rad = parseFloat(radius) || 10;
 
     const stations = await Station.findAll({
       include: [
@@ -39,7 +39,6 @@ app.get('/stations', async (req, res) => {
       const latestPrices = {};
       
       if (plainStation.Prices && plainStation.Prices.length > 0) {
-        // Sortowanie malejąco po dacie dodania, aby uzyskać najnowsze ceny jako pierwsze
         const sortedPrices = plainStation.Prices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         
         for (const price of sortedPrices) {
@@ -59,7 +58,6 @@ app.get('/stations', async (req, res) => {
       plainStation.prices = latestPrices;
       delete plainStation.Prices;
       
-      // Obliczanie odległości jeśli dostarczono koordynaty
       if (!isNaN(userLat) && !isNaN(userLng)) {
         plainStation.distance = getDistanceFromLatLonInKm(userLat, userLng, plainStation.lat, plainStation.lng);
       }
@@ -67,7 +65,6 @@ app.get('/stations', async (req, res) => {
       return plainStation;
     });
 
-    // Filtruj po promieniu, jeśli parametry zostały prawidłowo przekazane
     if (!isNaN(userLat) && !isNaN(userLng)) {
       result = result.filter(station => station.distance <= rad);
     }
@@ -110,17 +107,15 @@ app.post('/stations/:id/prices', authenticateToken, async (req, res) => {
       fuelTypeId
     });
 
-    // ETAP 4: Automatyczne przyznawanie punktów w Auth Service
     try {
       const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
-      await axios.patch(`${authServiceUrl}/users/${userId}/points`, {
+      await axios.patch(`${authServiceUrl}/api/users/${userId}/points`, {
         points: 1
       }, {
         headers: { 'Authorization': req.headers['authorization'] }
       });
       console.log(`Pomyślnie dodano punkt dla użytkownika ${userId}`);
     } catch (authError) {
-      // Łapiemy błąd z auth-service, by nie zepsuć odpowiedzi z station-service
       console.warn(`Uwaga: Nie udało się dodać punktu dla użytkownika ${userId}. Auth Service odpowiedział: ${authError.message}`);
     }
 
@@ -131,7 +126,6 @@ app.post('/stations/:id/prices', authenticateToken, async (req, res) => {
   }
 });
 
-// ETAP 5: F-ST-05 - Ocenianie stacji
 app.post('/stations/:id/ratings', authenticateToken, async (req, res) => {
   try {
     const stationId = parseInt(req.params.id);

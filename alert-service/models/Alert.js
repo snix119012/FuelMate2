@@ -12,7 +12,7 @@ const Alert = sequelize.define('Alert', {
     allowNull: false,
   },
   type: {
-    type: DataTypes.ENUM('patrol', 'fotoradar', 'wypadek', 'kontrola', 'kamera'),
+    type: DataTypes.ENUM('patrol', 'fotoradar', 'wypadek', 'roboty drogowe', 'zagrożenie'),
     allowNull: false,
   },
   latitude: {

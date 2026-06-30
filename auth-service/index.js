@@ -1,6 +1,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const path = require('path');
 const express = require('express');
+const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const swaggerUi = require('swagger-ui-express');
@@ -15,6 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 const swaggerDocument = YAML.load(path.join(__dirname, 'swagger.yaml'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 
 app.post('/register', async (req, res) => {
@@ -71,14 +73,35 @@ app.post('/login', async (req, res) => {
 
 app.patch('/api/users/:id/points', async (req, res) => {
   try {
-    const user = await User.findByPk(req.params.id);
+    const { id } = req.params;
+    const { points } = req.body;
+
+    const user = await User.findByPk(id);
     if (!user) {
-      return res.status(404).json({ error: 'Nie znaleziono użytkownika' });
+      return res.status(404).json({ error: 'Użytkownik nie został znaleziony' });
     }
-    const pointsToAdd = Number(req.body.points) || 0;
-    user.points = (user.points || 0) + pointsToAdd;
+
+    user.points = (user.points || 0) + parseInt(points || 0);
     await user.save();
-    res.json({ message: 'Punkty zaktualizowane', points: user.points });
+
+    res.json({ message: 'Punkty przyznane pomyślnie', currentPoints: user.points });
+  } catch (error) {
+    res.status(500).json({ error: 'Błąd serwera podczas dodawania punktów' });
+  }
+});
+
+app.get('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'email', 'firstName', 'lastName', 'city', 'postalCode', 'points', 'isAdmin']
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Użytkownik nie został znaleziony' });
+    }
+
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Błąd serwera' });
   }
