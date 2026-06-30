@@ -1,6 +1,7 @@
 $services = @(
     @{ name = "auth-service"; cmd = "node"; args = "index.js" },
     @{ name = "station-service"; cmd = "node"; args = "index.js" },
+    @{ name = "alert-service"; cmd = "node"; args = "index.js" },
     @{ name = "favorite-service"; cmd = "node"; args = "index.js" },
     @{ name = "api-gateway"; cmd = "node"; args = "index.js" },
     @{ name = "frontend"; cmd = "npm.cmd"; args = "run dev" }

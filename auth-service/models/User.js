@@ -33,10 +33,10 @@ const User = sequelize.define('User', {
   },
   isAdmin: {
     type: DataTypes.BOOLEAN,
-    defaultValue: false 
+    defaultValue: false
   }
 }, {
-  tableName: 'users' 
+  tableName: 'users'
 });
 
 module.exports = User;

@@ -16,8 +16,8 @@ function App() {
   const [refreshMap, setRefreshMap] = useState(0)
   const [token, setToken] = useState(localStorage.getItem('fuelmate_token') || '')
   
-  // Nowy stan dla panelu bocznego
   const [selectedStation, setSelectedStation] = useState(null)
+  const [alertLocation, setAlertLocation] = useState(null)
 
   useEffect(() => {
     if (token) setIsLoggedIn(true)
@@ -58,24 +58,25 @@ function App() {
 
             {activeTab === 'home' ? (
               <div>
-                <button 
-                  className="btn-premium"
-                  onClick={() => setIsAlertModalOpen(true)} 
-                  style={{ backgroundColor: '#ff4b4b', marginBottom: '1rem', border: 'none' }}
-                >
-                  ⚠️ Zgłoś zagrożenie drogowe
-                </button>
-
                 <AlertModal 
                   isOpen={isAlertModalOpen} 
                   onClose={() => setIsAlertModalOpen(false)} 
-                  onAlertAdded={() => setRefreshMap(prev => prev + 1)} 
+                  onAlertAdded={() => setRefreshMap(prev => prev + 1)}
+                  location={alertLocation}
                 />
+
+                <div style={{ backgroundColor: '#ff4b4b', color: 'white', padding: '10px', borderRadius: '8px', marginBottom: '10px', textAlign: 'center', fontWeight: 'bold' }}>
+                  ⚠️ Kliknij w dowolne miejsce na mapie, aby zgłosić nowe zagrożenie drogowe.
+                </div>
 
                 <div style={{ position: 'relative' }}>
                   <MapView 
                     refreshTrigger={refreshMap} 
                     onStationSelect={(station) => setSelectedStation(station)} 
+                    onMapClick={(latlng) => {
+                      setAlertLocation(latlng);
+                      setIsAlertModalOpen(true);
+                    }}
                   />
                   
                   {selectedStation && (

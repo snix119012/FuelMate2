@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../App';
 
-const AlertModal = ({ isOpen, onClose, onAlertAdded }) => {
+const AlertModal = ({ isOpen, onClose, onAlertAdded, location }) => {
   const { token } = useContext(AuthContext);
   const [type, setType] = useState('patrol');
   const [loading, setLoading] = useState(false);
@@ -10,40 +10,30 @@ const AlertModal = ({ isOpen, onClose, onAlertAdded }) => {
 
   const alertTypes = ['patrol', 'fotoradar', 'wypadek', 'kontrola', 'kamera'];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    if (!navigator.geolocation) {
-      setError('Geolokalizacja nie jest wspierana przez Twoją przeglądarkę.');
+    if (!location) {
+      setError('Lokalizacja nie została wybrana. Kliknij na mapę.');
       setLoading(false);
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        try {
-          await axios.post('http://localhost:3003/api/alerts', 
-            { type, latitude, longitude },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          
-          onAlertAdded();
-          onClose();
-        } catch (err) {
-          setError('Wystąpił błąd podczas dodawania alertu.');
-        } finally {
-          setLoading(false);
-        }
-      },
-      () => {
-        setError('Brak uprawnień do lokalizacji GPS.');
-        setLoading(false);
-      }
-    );
+    try {
+      await axios.post('http://localhost:3000/api/alerts', 
+        { type, latitude: location.lat, longitude: location.lng },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      onAlertAdded();
+      onClose();
+    } catch (err) {
+      setError('Wystąpił błąd podczas dodawania alertu.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -64,7 +54,7 @@ const AlertModal = ({ isOpen, onClose, onAlertAdded }) => {
           
           <div style={{ display: 'flex', gap: '10px' }}>
             <button type="submit" disabled={loading}>
-              {loading ? 'Zgłaszanie...' : 'Zgłoś (Pobierze GPS)'}
+              {loading ? 'Zgłaszanie...' : 'Dodaj zgłoszenie tutaj'}
             </button>
             <button type="button" onClick={onClose}>Anuluj</button>
           </div>

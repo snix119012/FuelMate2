@@ -4,56 +4,25 @@ import axios from 'axios';
 import { AuthContext } from '../App';
 import L from 'leaflet';
 
-const alertIcons = {
-  patrol: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2561/2561741.png',
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
-  }),
-  fotoradar: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/6840/6840333.png',
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
-  }),
-  wypadek: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3133/3133604.png',
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
-  }),
-  kontrola: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/9355/9355701.png',
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
-  }),
-  kamera: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3680/3680364.png',
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
-  }),
-  default: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/564/564016.png',
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30]
-  })
-};
 
 const MapAlertMarkers = ({ refreshTrigger }) => {
   const map = useMap();
   const { token } = useContext(AuthContext);
   const [alerts, setAlerts] = useState([]);
+  const [mapCenter, setMapCenter] = useState(map.getCenter());
+
+  useEffect(() => {
+    const handleMove = () => setMapCenter(map.getCenter());
+    map.on('moveend', handleMove);
+    return () => map.off('moveend', handleMove);
+  }, [map]);
 
   useEffect(() => {
     const fetchAlerts = async () => {
-      const center = map.getCenter();
       try {
-        const response = await axios.get('http://localhost:3003/api/alerts', {
-          params: { lat: center.lat, lng: center.lng, radius: 50 }
+        const response = await axios.get('http://localhost:3000/api/alerts', {
+          params: { lat: mapCenter.lat, lng: mapCenter.lng, radius: 50 },
+          headers: { Authorization: `Bearer ${token}` }
         });
         setAlerts(response.data);
       } catch (error) {
@@ -62,17 +31,14 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
     };
 
     fetchAlerts();
-    
-    map.on('moveend', fetchAlerts);
-    return () => {
-      map.off('moveend', fetchAlerts);
-    };
-  }, [map, refreshTrigger]);
+    const interval = setInterval(fetchAlerts, 30000);
+    return () => clearInterval(interval);
+  }, [mapCenter, token, refreshTrigger]);
 
-  const handleConfirm = async (alertId) => {
+  const handleConfirmAlert = async (alertId) => {
     if (!token) return alert('Musisz być zalogowany, aby potwierdzić.');
     try {
-      await axios.post(`http://localhost:3003/api/alerts/${alertId}/confirm`, {}, {
+      await axios.post(`http://localhost:3000/api/alerts/${alertId}/confirm`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('Dziękujemy za potwierdzenie!');
@@ -82,32 +48,49 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
   };
 
   const getIcon = (type) => {
-    return alertIcons[type] || alertIcons.default;
+    let emoji = '⚠️';
+    let color = '#ff4b4b';
+
+    switch (type) {
+      case 'patrol': emoji = '🚓'; color = '#3b82f6'; break;
+      case 'fotoradar': emoji = '📸'; color = '#eab308'; break;
+      case 'wypadek': emoji = '💥'; color = '#ef4444'; break;
+      case 'kontrola': emoji = '👮'; color = '#8b5cf6'; break;
+      case 'kamera': emoji = '📹'; color = '#f97316'; break;
+    }
+
+    return L.divIcon({
+      className: 'custom-alert-marker',
+      html: `<div style="font-size: 20px; background: ${color}; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.6);">${emoji}</div>`,
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -17]
+    });
   };
 
   return (
     <>
       {alerts.map(alert => (
-        <Marker 
-          key={alert.id} 
-          position={[alert.latitude, alert.longitude]} 
+        <Marker
+          key={alert.id}
+          position={[alert.latitude, alert.longitude]}
           icon={getIcon(alert.type)}
         >
           <Popup>
             <div style={{ textAlign: 'center' }}>
               <strong style={{ fontSize: '1.1rem', color: '#ff4b4b' }}>
                 {alert.type.toUpperCase()}
-              </strong> <br/>
+              </strong> <br />
               <span style={{ color: '#555' }}>
                 Potwierdzenia: <strong>{alert.confirmations?.length || 0}</strong>
-              </span> <br/>
+              </span> <br />
               {token && (
-                 <button 
-                   onClick={() => handleConfirm(alert.id)} 
-                   style={{ marginTop: '8px', cursor: 'pointer', padding: '3px 8px' }}
-                 >
-                   Potwierdź
-                 </button>
+                <button
+                  onClick={() => handleConfirmAlert(alert.id)}
+                  style={{ marginTop: '8px', cursor: 'pointer', padding: '3px 8px' }}
+                >
+                  Potwierdź
+                </button>
               )}
             </div>
           </Popup>
