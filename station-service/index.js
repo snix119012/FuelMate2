@@ -158,10 +158,34 @@ app.post('/stations/:id/ratings', authenticateToken, async (req, res) => {
       stationId
     });
 
+    const ratings = await StationRating.findAll({ where: { stationId } });
+    const averageRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+    await station.update({ averageRating, ratingCount: ratings.length });
+
     res.status(201).json({ message: 'Ocena dodana pomyślnie', rating: newRating });
   } catch (error) {
     console.error('Error adding rating:', error);
     res.status(500).json({ error: 'Wystąpił błąd podczas dodawania oceny' });
+  }
+});
+
+app.get('/stations/:id/ratings', async (req, res) => {
+  try {
+    const stationId = parseInt(req.params.id);
+
+    if (isNaN(stationId)) {
+      return res.status(400).json({ error: 'Nieprawidłowe ID stacji' });
+    }
+
+    const ratings = await StationRating.findAll({
+      where: { stationId },
+      order: [['createdAt', 'DESC']]
+    });
+
+    res.json(ratings);
+  } catch (error) {
+    console.error('Error fetching ratings:', error);
+    res.status(500).json({ error: 'Wystąpił błąd podczas pobierania ocen' });
   }
 });
 
