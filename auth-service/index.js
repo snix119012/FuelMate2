@@ -22,7 +22,7 @@ app.post('/register', async (req, res) => {
     
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: 'Użytkownik już istnieje' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,9 +36,9 @@ app.post('/register', async (req, res) => {
       postalCode
     });
 
-    res.status(201).json({ message: 'User created successfully', userId: newUser.id });
+    res.status(201).json({ message: 'Użytkownik utworzony pomyślnie', userId: newUser.id });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -48,12 +48,12 @@ app.post('/login', async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Nieprawidłowe dane logowania' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Nieprawidłowe dane logowania' });
     }
 
     const token = jwt.sign(
@@ -64,15 +64,19 @@ app.post('/login', async (req, res) => {
 
     res.json({ token, userId: user.id });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Auth Service działa poprawnie');
+});
+
 sequelize.sync().then(() => {
-  console.log('Database synced');
+  console.log('Baza danych zsynchronizowana');
   app.listen(PORT, () => {
-    console.log(`Auth Service listening on port ${PORT}`);
+    console.log(`Auth Service nasłuchuje na porcie ${PORT}`);
   });
 }).catch(err => {
-  console.error('Failed to sync database:', err);
+  console.error('Nie udało się zsynchronizować bazy danych:', err);
 });

@@ -29,9 +29,9 @@ app.use('/api/favorites', createProxyMiddleware({
 }));
 
 app.get('/', (req, res) => {
-  res.send('API Gateway is running');
+  res.send('API Gateway działa poprawnie');
 });
 
 app.listen(PORT, () => {
-  console.log(`API Gateway listening on port ${PORT}`);
+  console.log(`API Gateway nasłuchuje na porcie ${PORT}`);
 });
