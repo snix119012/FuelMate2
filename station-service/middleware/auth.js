@@ -8,7 +8,9 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Brak tokena autoryzacyjnego' });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ error: 'Token nieprawidłowy lub wygasł' });
     }
