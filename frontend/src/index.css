@@ -1,1 +1,68 @@
+:root {
+  --accent-primary: #10b981;
+  --accent-secondary: #3b82f6;
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --danger: #ef4444;
+}
 
+/* Przyciski premium w naszej aplikacji (żeby nie psuły AuthModal) */
+.btn-premium {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-family: sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+  background: #0ea5e9;
+}
+
+/* Glassmorphism tylko dla panelu na mapie */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+  color: white;
+}
+
+/* Customowy marker ceny na mapie */
+.price-marker {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  color: var(--accent-primary);
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-primary);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  font-size: 14px;
+  text-align: center;
+  min-width: 50px;
+}
+
+/* Inputy formularza w panelu stacji */
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  width: 100%;
+  font-family: sans-serif;
+  margin-bottom: 1rem;
+  outline: none;
+}

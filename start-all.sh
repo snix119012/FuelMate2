@@ -89,7 +89,7 @@ fi
 
 start_service "favorite-service" "node index.js"
 start_service "api-gateway" "node index.js"
-start_service "frontend" "node_modules/.bin/vite"
+start_service "frontend" "npm run dev"
 
 sleep 6
 
