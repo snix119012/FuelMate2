@@ -69,7 +69,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.patch('/api/users/:id/points', async (req, res) => {
+async function addPoints(req, res) {
   try {
     const user = await User.findByPk(req.params.id);
     if (!user) {
@@ -82,7 +82,12 @@ app.patch('/api/users/:id/points', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Błąd serwera' });
   }
-});
+}
+
+// Endpoint używany przez alert-service i station-service
+app.patch('/api/users/:id/points', addPoints);
+// Alias dla station-service, który odwołuje się bezpośrednio bez /api
+app.patch('/users/:id/points', addPoints);
 
 app.get('/', (req, res) => {
   res.send('Auth Service działa poprawnie');
