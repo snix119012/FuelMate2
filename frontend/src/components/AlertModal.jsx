@@ -8,7 +8,7 @@ const AlertModal = ({ isOpen, onClose, onAlertAdded }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const alertTypes = ['patrol', 'fotoradar', 'wypadek', 'kontrola', 'kamera'];
+  const alertTypes = ['patrol', 'fotoradar', 'wypadek', 'roboty drogowe', 'zagrożenie'];
 
   const handleSubmit = (e) => {
     e.preventDefault();

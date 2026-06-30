@@ -69,3 +69,7 @@ body {
   border-top: 1px solid #eee;
   margin: 20px 0;
 }
+
+.white-marker-icon {
+  filter: brightness(0) invert(1);
+}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, createContext } from 'react'
 import AuthModal from './AuthModal'
 import UserProfile from './UserProfile'
 import MapView from './components/MapView'
@@ -15,8 +15,6 @@ function App() {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false)
   const [refreshMap, setRefreshMap] = useState(0)
   const [token, setToken] = useState(localStorage.getItem('fuelmate_token') || '')
-  
-  // Nowy stan dla panelu bocznego
   const [selectedStation, setSelectedStation] = useState(null)
 
   useEffect(() => {
@@ -46,26 +44,29 @@ function App() {
           <AuthModal onLogin={handleLogin} />
         ) : (
           <div>
-            <nav style={{ marginBottom: '1rem', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '12px' }}>
-              <button className="btn-premium" onClick={() => setActiveTab('home')} style={{ marginRight: '0.5rem' }}>
+            <nav style={{ marginBottom: '1rem', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '12px', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button className="btn-premium" onClick={() => setActiveTab('home')}>
                 Mapa i Stacje
               </button>
-              <button className="btn-premium" onClick={() => setActiveTab('profile')} style={{ marginRight: '0.5rem', background: 'transparent', border: '1px solid var(--accent-primary)' }}>
+              <button className="btn-premium" onClick={() => setActiveTab('profile')} style={{ background: 'transparent', border: '1px solid var(--accent-primary)', color: '#000000' }}>
                 Twój Profil
               </button>
-              <button className="btn-premium" onClick={handleLogout} style={{ background: 'var(--danger)', float: 'right' }}>Wyloguj</button>
+              
+              {activeTab === 'home' && (
+                <button 
+                  className="btn-premium"
+                  onClick={() => setIsAlertModalOpen(true)} 
+                  style={{ backgroundColor: '#ff4b4b', border: 'none', color: '#ffffff' }}
+                >
+                  Zgłoś zagrożenie drogowe
+                </button>
+              )}
+
+              <button className="btn-premium" onClick={handleLogout} style={{ background: 'var(--danger)', marginLeft: 'auto' }}>Wyloguj</button>
             </nav>
 
             {activeTab === 'home' ? (
               <div>
-                <button 
-                  className="btn-premium"
-                  onClick={() => setIsAlertModalOpen(true)} 
-                  style={{ backgroundColor: '#ff4b4b', marginBottom: '1rem', border: 'none' }}
-                >
-                  ⚠️ Zgłoś zagrożenie drogowe
-                </button>
-
                 <AlertModal 
                   isOpen={isAlertModalOpen} 
                   onClose={() => setIsAlertModalOpen(false)} 

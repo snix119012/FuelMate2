@@ -3,43 +3,50 @@ import { Marker, Popup, useMap } from 'react-leaflet';
 import axios from 'axios';
 import { AuthContext } from '../App';
 import L from 'leaflet';
+import { jwtDecode } from 'jwt-decode';
 
 const alertIcons = {
   patrol: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/2561/2561741.png',
+    iconUrl: 'https://cdn-icons-png.flaticon.com/128/11618/11618268.png',
     iconSize: [35, 35],
     iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
+    popupAnchor: [0, -35],
+    className: 'white-marker-icon'
   }),
   fotoradar: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/6840/6840333.png',
+    iconUrl: 'https://cdn-icons-png.flaticon.com/128/12294/12294458.png',
     iconSize: [35, 35],
     iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
+    popupAnchor: [0, -35],
+    className: 'white-marker-icon'
   }),
   wypadek: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3133/3133604.png',
+    iconUrl: 'https://cdn-icons-png.flaticon.com/128/65/65788.png',
     iconSize: [35, 35],
     iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
+    popupAnchor: [0, -35],
+    className: 'white-marker-icon'
   }),
-  kontrola: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/9355/9355701.png',
+  "roboty drogowe": new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/128/3586/3586685.png',
     iconSize: [35, 35],
     iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
+    popupAnchor: [0, -35],
+    className: 'white-marker-icon'
   }),
-  kamera: new L.Icon({
-    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3680/3680364.png',
+  zagrożenie: new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/128/272/272340.png',
     iconSize: [35, 35],
     iconAnchor: [17, 35],
-    popupAnchor: [0, -35]
+    popupAnchor: [0, -35],
+    className: 'white-marker-icon'
   }),
   default: new L.Icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/512/564/564016.png',
     iconSize: [30, 30],
     iconAnchor: [15, 30],
-    popupAnchor: [0, -30]
+    popupAnchor: [0, -30],
+    className: 'white-marker-icon'
   })
 };
 
@@ -47,6 +54,21 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
   const map = useMap();
   const { token } = useContext(AuthContext);
   const [alerts, setAlerts] = useState([]);
+  const [localRefresh, setLocalRefresh] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setCurrentUserId(decoded.id);
+      } catch (error) {
+        console.error('Błąd dekodowania tokenu:', error);
+      }
+    } else {
+      setCurrentUserId(null);
+    }
+  }, [token]);
 
   useEffect(() => {
     const fetchAlerts = async () => {
@@ -67,7 +89,7 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
     return () => {
       map.off('moveend', fetchAlerts);
     };
-  }, [map, refreshTrigger]);
+  }, [map, refreshTrigger, localRefresh]);
 
   const handleConfirm = async (alertId) => {
     if (!token) return alert('Musisz być zalogowany, aby potwierdzić.');
@@ -81,6 +103,21 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
     }
   };
 
+  const handleDelete = async (alertId) => {
+    if (!token) return alert('Musisz być zalogowany, aby usunąć alert.');
+    if (!confirm('Czy na pewno chcesz usunąć to zgłoszenie?')) return;
+    
+    try {
+      await axios.delete(`http://localhost:3003/api/alerts/${alertId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Alert został usunięty.');
+      setLocalRefresh(prev => prev + 1);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Błąd podczas usuwania alertu.');
+    }
+  };
+
   const getIcon = (type) => {
     return alertIcons[type] || alertIcons.default;
   };
@@ -89,7 +126,7 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
     <>
       {alerts.map(alert => (
         <Marker 
-          key={alert.id} 
+          key={`${alert.id}-${currentUserId}`} 
           position={[alert.latitude, alert.longitude]} 
           icon={getIcon(alert.type)}
         >
@@ -101,13 +138,29 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
               <span style={{ color: '#555' }}>
                 Potwierdzenia: <strong>{alert.confirmations?.length || 0}</strong>
               </span> <br/>
+              
               {token && (
-                 <button 
-                   onClick={() => handleConfirm(alert.id)} 
-                   style={{ marginTop: '8px', cursor: 'pointer', padding: '3px 8px' }}
-                 >
-                   Potwierdź
-                 </button>
+                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', marginTop: '8px' }}>
+                  
+                  {currentUserId != alert.userId && (
+                    <button 
+                      onClick={() => handleConfirm(alert.id)} 
+                      style={{ cursor: 'pointer', padding: '3px 8px' }}
+                    >
+                      Potwierdź
+                    </button>
+                  )}
+                  
+                  {currentUserId == alert.userId && (
+                    <button 
+                      onClick={() => handleDelete(alert.id)} 
+                      style={{ cursor: 'pointer', padding: '3px 8px', backgroundColor: '#ff4b4b', color: 'white', border: 'none', borderRadius: '3px' }}
+                    >
+                      Usuń
+                    </button>
+                  )}
+
+                </div>
               )}
             </div>
           </Popup>

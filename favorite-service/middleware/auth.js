@@ -11,7 +11,7 @@ function authenticateToken(req, res, next) {
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       console.error('JWT verify error:', err.message);
-      return res.status(403).json({ error: 'Token nieprawidłowy lub wygasł' });
+      return res.status(403).json({ error: 'prawidłowy lub wygasł' });
     }
     req.user = user;
     next();

@@ -6,6 +6,7 @@ const authenticateToken = require('../middleware/authMiddleware');
 router.post('/', authenticateToken, alertController.createAlert);
 router.get('/', alertController.getAlerts);
 router.post('/:alertId/confirm', authenticateToken, alertController.confirmAlert);
+router.delete('/:alertId', authenticateToken, alertController.deleteAlert);
 
 module.exports = router;
 
