@@ -4,27 +4,31 @@ const http = require('http');
 const token = jwt.sign({ id: 1, email: 'test@example.com' }, 'supersecretkey');
 
 const data = JSON.stringify({
-  fuelTypeId: 1,
-  price: 6.54
+  rating: 5,
+  comment: 'Super stacja, miła obsługa!'
 });
 
 const options = {
   hostname: 'localhost',
   port: 3002,
-  path: '/stations/1/prices',
+  path: '/stations/1/ratings',
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer ' + token,
-    'Content-Length': data.length
+    'Content-Length': Buffer.byteLength(data)
   }
 };
 
 setTimeout(() => {
   const req = http.request(options, res => {
     console.log(`\nResponse status: ${res.statusCode}`);
+    let body = '';
     res.on('data', d => {
-      console.log('Response body:', d.toString());
+      body += d;
+    });
+    res.on('end', () => {
+      console.log('Response body:', body);
     });
   });
 

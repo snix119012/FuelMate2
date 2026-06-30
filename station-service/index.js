@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const axios = require('axios');
 const sequelize = require('./db');
 const { Station, FuelType, Price, StationRating } = require('./models');
 const authenticateToken = require('./middleware/auth');
@@ -109,10 +110,58 @@ app.post('/stations/:id/prices', authenticateToken, async (req, res) => {
       fuelTypeId
     });
 
+    // ETAP 4: Automatyczne przyznawanie punktów w Auth Service
+    try {
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+      await axios.patch(`${authServiceUrl}/users/${userId}/points`, {
+        points: 1
+      }, {
+        headers: { 'Authorization': req.headers['authorization'] }
+      });
+      console.log(`Pomyślnie dodano punkt dla użytkownika ${userId}`);
+    } catch (authError) {
+      // Łapiemy błąd z auth-service, by nie zepsuć odpowiedzi z station-service
+      console.warn(`Uwaga: Nie udało się dodać punktu dla użytkownika ${userId}. Auth Service odpowiedział: ${authError.message}`);
+    }
+
     res.status(201).json({ message: 'Cena dodana pomyślnie', price: newPrice });
   } catch (error) {
     console.error('Error adding price:', error);
     res.status(500).json({ error: 'Wystąpił błąd podczas dodawania ceny' });
+  }
+});
+
+// ETAP 5: F-ST-05 - Ocenianie stacji
+app.post('/stations/:id/ratings', authenticateToken, async (req, res) => {
+  try {
+    const stationId = parseInt(req.params.id);
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+
+    if (isNaN(stationId)) {
+      return res.status(400).json({ error: 'Nieprawidłowe ID stacji' });
+    }
+
+    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Ocena (rating) jest wymagana i musi być liczbą całkowitą od 1 do 5' });
+    }
+
+    const station = await Station.findByPk(stationId);
+    if (!station) {
+      return res.status(404).json({ error: 'Stacja nie została znaleziona' });
+    }
+
+    const newRating = await StationRating.create({
+      rating,
+      comment: comment || null,
+      userId,
+      stationId
+    });
+
+    res.status(201).json({ message: 'Ocena dodana pomyślnie', rating: newRating });
+  } catch (error) {
+    console.error('Error adding rating:', error);
+    res.status(500).json({ error: 'Wystąpił błąd podczas dodawania oceny' });
   }
 });
 
