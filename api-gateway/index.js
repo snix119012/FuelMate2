@@ -10,22 +10,28 @@ app.use(cors());
 
 app.use('/api/auth', createProxyMiddleware({ target: process.env.AUTH_SERVICE_URL || 'http://localhost:3001', changeOrigin: true }));
 
-app.use('/api/stations', createProxyMiddleware({
-  target: process.env.STATIONS_SERVICE_URL || 'http://localhost:3002',
+app.use('/api/users', createProxyMiddleware({
+  target: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
   changeOrigin: true,
-  pathRewrite: (path, req) => '/stations' + req.url
+  pathRewrite: (path, req) => req.originalUrl.replace(/^\/api\/users/, '/api/users')
+}));
+
+app.use('/api/stations', createProxyMiddleware({
+  target: process.env.STATION_SERVICE_URL || 'http://localhost:3002',
+  changeOrigin: true,
+  pathRewrite: (path, req) => req.originalUrl.replace(/^\/api\/stations/, '/stations')
 }));
 
 app.use('/api/alerts', createProxyMiddleware({
-  target: process.env.ALERTS_SERVICE_URL || 'http://localhost:3003',
+  target: process.env.ALERT_SERVICE_URL || 'http://localhost:3003',
   changeOrigin: true,
-  pathRewrite: (path, req) => '/api/alerts' + req.url
+  pathRewrite: (path, req) => req.originalUrl.replace(/^\/api\/alerts/, '/api/alerts')
 }));
 
 app.use('/api/favorites', createProxyMiddleware({
-  target: process.env.FAVORITES_SERVICE_URL || 'http://localhost:3004',
+  target: process.env.FAVORITE_SERVICE_URL || 'http://localhost:3004',
   changeOrigin: true,
-  pathRewrite: (path, req) => '/api/favorites' + req.url
+  pathRewrite: (path, req) => req.originalUrl.replace(/^\/api\/favorites/, '/api/favorites')
 }));
 
 app.get('/', (req, res) => {

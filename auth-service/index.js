@@ -69,6 +69,21 @@ app.post('/login', async (req, res) => {
   }
 });
 
+app.patch('/api/users/:id/points', async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'Nie znaleziono użytkownika' });
+    }
+    const pointsToAdd = Number(req.body.points) || 0;
+    user.points = (user.points || 0) + pointsToAdd;
+    await user.save();
+    res.json({ message: 'Punkty zaktualizowane', points: user.points });
+  } catch (error) {
+    res.status(500).json({ error: 'Błąd serwera' });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('Auth Service działa poprawnie');
 });

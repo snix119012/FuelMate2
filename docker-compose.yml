@@ -1,0 +1,110 @@
+services:
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - JWT_SECRET=supersecretkey
+    networks:
+      - fuelmate-network
+
+  station-service:
+    build: ./station-service
+    container_name: station-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - JWT_SECRET=supersecretkey
+      - DB_PATH=./data/database.sqlite
+    volumes:
+      - station-data:/app/data
+    networks:
+      - fuelmate-network
+    depends_on:
+      - auth-service
+
+  station-seed:
+    build: ./station-service
+    container_name: station-seed
+    command: node seed.js
+    environment:
+      - DB_PATH=./data/database.sqlite
+    volumes:
+      - station-data:/app/data
+    networks:
+      - fuelmate-network
+    depends_on:
+      - station-service
+
+  favorite-service:
+    build: ./favorite-service
+    container_name: favorite-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - JWT_SECRET=supersecretkey
+      - CORS_ORIGIN=http://localhost:5173
+    networks:
+      - fuelmate-network
+    depends_on:
+      - auth-service
+
+  alert-service:
+    build: ./alert-service
+    container_name: alert-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - JWT_SECRET=supersecretkey
+      - DB_STORAGE_PATH=./data/alerts.sqlite
+      - API_GATEWAY_URL=http://api-gateway:3000
+    volumes:
+      - alert-data:/app/data
+    networks:
+      - fuelmate-network
+    depends_on:
+      - auth-service
+      - api-gateway
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - STATION_SERVICE_URL=http://station-service:3002
+      - ALERT_SERVICE_URL=http://alert-service:3003
+      - FAVORITE_SERVICE_URL=http://favorite-service:3004
+    networks:
+      - fuelmate-network
+    depends_on:
+      - auth-service
+      - station-service
+      - favorite-service
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    networks:
+      - fuelmate-network
+    depends_on:
+      - api-gateway
+
+networks:
+  fuelmate-network:
+    driver: bridge
+
+volumes:
+  station-data:
+  alert-data:

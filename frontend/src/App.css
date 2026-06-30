@@ -69,3 +69,34 @@ body {
   border-top: 1px solid #eee;
   margin: 20px 0;
 }
+
+/* Nawigacja po zalogowaniu */
+.main-nav {
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.main-nav .btn-premium {
+  margin-right: 0.5rem;
+}
+
+/* Info pasek na stronie głównej */
+.info-bar {
+  background: var(--accent-primary);
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Kontener na zawartość po zalogowaniu */
+.app-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}

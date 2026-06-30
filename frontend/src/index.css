@@ -1,13 +1,21 @@
 :root {
-  --accent-primary: #10b981;
+  --accent-primary: #2563eb;
   --accent-secondary: #3b82f6;
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --danger: #ef4444;
+  --bg: #f4f4f4;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-muted: #666666;
+  --border: #dddddd;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Przyciski premium w naszej aplikacji (żeby nie psuły AuthModal) */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Przyciski premium */
 .btn-premium {
   background: var(--accent-primary);
   color: #fff;
@@ -19,50 +27,53 @@
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 }
 
 .btn-premium:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
-  background: #0ea5e9;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+  background: #1d4ed8;
 }
 
-/* Glassmorphism tylko dla panelu na mapie */
+/* Jasny panel/karta */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   border-radius: 16px;
-  color: white;
+  color: var(--text);
 }
 
 /* Customowy marker ceny na mapie */
 .price-marker {
-  background: var(--glass-bg);
-  backdrop-filter: blur(8px);
+  background: var(--card-bg);
   color: var(--accent-primary);
   font-weight: 800;
   padding: 4px 8px;
   border-radius: 8px;
   border: 1px solid var(--accent-primary);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   font-size: 14px;
   text-align: center;
   min-width: 50px;
 }
 
-/* Inputy formularza w panelu stacji */
+/* Inputy formularza */
 .glass-input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: white;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text);
   padding: 0.75rem;
   border-radius: 8px;
   width: 100%;
   font-family: sans-serif;
   margin-bottom: 1rem;
   outline: none;
+  box-sizing: border-box;
+}
+
+.glass-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }

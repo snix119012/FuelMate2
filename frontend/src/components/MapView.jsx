@@ -62,25 +62,25 @@ const MapView = ({ refreshTrigger, onStationSelect, onMapClick }) => {
       
       {/* Szklany panel sterowania */}
       <div className="glass-panel" style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, padding: '15px', width: '250px' }}>
-        <h3 style={{ marginBottom: '10px', fontSize: '1rem', color: 'white' }}>Zasięg wyszukiwania</h3>
-        <input 
-          type="range" 
-          min="1" 
-          max="500" 
-          value={radius} 
+        <h3 style={{ marginBottom: '10px', fontSize: '1rem', color: '#333' }}>Zasięg wyszukiwania</h3>
+        <input
+          type="range"
+          min="1"
+          max="500"
+          value={radius}
           onChange={(e) => setRadius(e.target.value)}
           style={{ width: '100%', accentColor: 'var(--accent-primary)' }}
         />
-        <div style={{ textAlign: 'center', marginTop: '5px', fontWeight: 'bold', color: 'white' }}>
+        <div style={{ textAlign: 'center', marginTop: '5px', fontWeight: 'bold', color: '#333' }}>
           {radius} km
         </div>
       </div>
 
-      <div style={{ height: '85vh', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--glass-border)', boxShadow: 'var(--glass-shadow)' }}>
-        <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%', backgroundColor: '#0f172a' }}>
+      <div style={{ height: '85vh', width: '100%', borderRadius: '16px', overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow)' }}>
+        <MapContainer center={mapCenter} zoom={6} style={{ height: '100%', width: '100%', backgroundColor: '#e5e7eb' }}>
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           <ChangeMapView center={mapCenter} />

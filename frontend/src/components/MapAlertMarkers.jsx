@@ -86,8 +86,9 @@ const MapAlertMarkers = ({ refreshTrigger }) => {
               </span> <br />
               {token && (
                 <button
+                  className="btn-premium"
                   onClick={() => handleConfirmAlert(alert.id)}
-                  style={{ marginTop: '8px', cursor: 'pointer', padding: '3px 8px' }}
+                  style={{ marginTop: '8px', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
                 >
                   Potwierdź
                 </button>

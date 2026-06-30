@@ -17,8 +17,8 @@ export default function UserProfile({ token }) {
   }, [token]);
 
   return (
-    <div style={{ padding: '1rem', border: '1px solid #ddd', borderRadius: '4px' }}>
-      <h2>Profil użytkownika</h2>
+    <div className="glass-panel" style={{ padding: '1.5rem' }}>
+      <h2 style={{ color: '#333', marginTop: 0 }}>Profil użytkownika</h2>
       {decoded ? (
         <div style={{ marginBottom: '1rem' }}>
           <p><strong>Email:</strong> {decoded.email}</p>

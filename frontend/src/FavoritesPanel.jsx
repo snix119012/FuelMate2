@@ -188,10 +188,10 @@ export default function FavoritesPanel({ token }) {
     : null;
 
   return (
-    <div style={{ padding: '1rem', border: '1px solid #ccc', marginTop: '1rem' }}>
-      <h2>Ulubione stacje</h2>
+    <div className="glass-panel" style={{ padding: '1.5rem', marginTop: '1rem' }}>
+      <h2 style={{ color: '#333', marginTop: 0 }}>Ulubione stacje</h2>
 
-      <button onClick={fetchFavorites} style={{ marginBottom: '1rem' }}>
+      <button className="btn-premium" onClick={fetchFavorites} style={{ marginBottom: '1rem' }}>
         Odśwież ulubione
       </button>
 
@@ -202,13 +202,15 @@ export default function FavoritesPanel({ token }) {
             placeholder="Wyszukaj stację..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            style={{ width: '200px', marginRight: '0.5rem' }}
+            className="glass-input"
+            style={{ width: '200px', marginRight: '0.5rem', display: 'inline-block' }}
           />
           <select
             value={selectedStationId}
             onChange={e => setSelectedStationId(e.target.value)}
             required
-            style={{ width: '240px' }}
+            className="glass-input"
+            style={{ width: '240px', display: 'inline-block' }}
           >
             <option value="">-- Wybierz stację --</option>
             {availableStations.map(s => (
@@ -218,12 +220,12 @@ export default function FavoritesPanel({ token }) {
             ))}
           </select>
         </div>
-        <button type="submit" style={{ marginTop: '0.5rem' }}>
+        <button type="submit" className="btn-premium" style={{ marginTop: '0.5rem' }}>
           Dodaj do ulubionych
         </button>
       </form>
 
-      {message && <p><em>{message}</em></p>}
+      {message && <p style={{ color: '#333' }}><em>{message}</em></p>}
 
       <ul>
         {favorites.map(f => (
@@ -245,11 +247,11 @@ export default function FavoritesPanel({ token }) {
             {' — '}
             powiadomienia: {f.notifyOnPriceChange ? 'WŁ' : 'WYŁ'}
             {' '}
-            <button onClick={() => toggleNotifications(f.id, f.notifyOnPriceChange)}>
+            <button className="btn-premium" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => toggleNotifications(f.id, f.notifyOnPriceChange)}>
               {f.notifyOnPriceChange ? 'Wyłącz' : 'Włącz'}
             </button>
             {' '}
-            <button onClick={() => removeFavorite(f.id)}>Usuń</button>
+            <button className="btn-premium" style={{ background: 'var(--danger)', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => removeFavorite(f.id)}>Usuń</button>
           </li>
         ))}
       </ul>
@@ -271,10 +273,9 @@ export default function FavoritesPanel({ token }) {
           onClick={closeStationDetails}
         >
           <div
+            className="glass-panel"
             style={{
-              backgroundColor: 'white',
               padding: '1.5rem',
-              borderRadius: '8px',
               maxWidth: '500px',
               width: '90%',
               maxHeight: '90vh',
@@ -282,7 +283,7 @@ export default function FavoritesPanel({ token }) {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3>{updatedSelectedStation.name}</h3>
+            <h3 style={{ color: '#333', marginTop: 0 }}>{updatedSelectedStation.name}</h3>
             {updatedSelectedStation.brand && <p><strong>Marka:</strong> {updatedSelectedStation.brand}</p>}
             {updatedSelectedStation.address && <p><strong>Adres:</strong> {updatedSelectedStation.address}</p>}
             <p><strong>Współrzędne:</strong> {updatedSelectedStation.lat}, {updatedSelectedStation.lng}</p>
@@ -307,6 +308,8 @@ export default function FavoritesPanel({ token }) {
                 {selectedFavorite.notifyOnPriceChange ? 'włączone' : 'wyłączone'}
                 {' '}
                 <button
+                  className="btn-premium"
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
                   onClick={() => toggleNotifications(selectedFavorite.id, selectedFavorite.notifyOnPriceChange)}
                 >
                   {selectedFavorite.notifyOnPriceChange ? 'Wyłącz' : 'Włącz'}
@@ -356,12 +359,12 @@ export default function FavoritesPanel({ token }) {
                   style={{ width: '100%' }}
                 />
               </div>
-              <button type="submit" style={{ marginTop: '0.5rem' }}>
+              <button type="submit" className="btn-premium" style={{ marginTop: '0.5rem' }}>
                 Dodaj ocenę
               </button>
             </form>
 
-            <button onClick={closeStationDetails} style={{ marginTop: '1rem' }}>
+            <button className="btn-premium" onClick={closeStationDetails} style={{ marginTop: '1rem', background: 'white', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)' }}>
               Zamknij
             </button>
           </div>

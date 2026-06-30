@@ -39,18 +39,18 @@ function App() {
 
   return (
     <AuthContext.Provider value={{ token }}>
-      <div style={{ fontFamily: 'sans-serif', padding: '1rem', background: 'transparent' }}>
-        <h1 className="brand-title">FuelMate</h1>
+      <div className="app-container" style={{ fontFamily: 'sans-serif', padding: '1rem' }}>
+        <h1 className="brand-title" style={{ color: '#333', textAlign: 'center' }}>FuelMate</h1>
 
         {!isLoggedIn ? (
           <AuthModal onLogin={handleLogin} />
         ) : (
           <div>
-            <nav style={{ marginBottom: '1rem', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '12px' }}>
-              <button className="btn-premium" onClick={() => setActiveTab('home')} style={{ marginRight: '0.5rem' }}>
+            <nav className="main-nav">
+              <button className="btn-premium" onClick={() => setActiveTab('home')}>
                 Mapa i Stacje
               </button>
-              <button className="btn-premium" onClick={() => setActiveTab('profile')} style={{ marginRight: '0.5rem', background: 'transparent', border: '1px solid var(--accent-primary)' }}>
+              <button className="btn-premium" onClick={() => setActiveTab('profile')} style={{ marginLeft: '0.5rem', background: 'white', color: 'var(--accent-primary)', border: '1px solid var(--accent-primary)' }}>
                 Twój Profil
               </button>
               <button className="btn-premium" onClick={handleLogout} style={{ background: 'var(--danger)', float: 'right' }}>Wyloguj</button>
@@ -58,15 +58,15 @@ function App() {
 
             {activeTab === 'home' ? (
               <div>
-                <AlertModal 
-                  isOpen={isAlertModalOpen} 
-                  onClose={() => setIsAlertModalOpen(false)} 
+                <AlertModal
+                  isOpen={isAlertModalOpen}
+                  onClose={() => setIsAlertModalOpen(false)}
                   onAlertAdded={() => setRefreshMap(prev => prev + 1)}
                   location={alertLocation}
                 />
 
-                <div style={{ backgroundColor: '#ff4b4b', color: 'white', padding: '10px', borderRadius: '8px', marginBottom: '10px', textAlign: 'center', fontWeight: 'bold' }}>
-                  ⚠️ Kliknij w dowolne miejsce na mapie, aby zgłosić nowe zagrożenie drogowe.
+                <div className="info-bar">
+                  Kliknij w dowolne miejsce na mapie, aby zgłosić nowe zagrożenie drogowe.
                 </div>
 
                 <div style={{ position: 'relative' }}>
